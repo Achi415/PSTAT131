@@ -1,0 +1,86 @@
+---
+title: "PSTAT131-HW1"
+author: "Russell Liu"
+date: "2022-09-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Machine Learning Main Ideas
+
+Question 1: Supervised learning is the learning that has a supervisor which is Y, and it gives corresponding output and input. While unsupervised learning does not have a supervisor. Their difference is just the known and unknown of response(supervisor).
+
+Question 2: In regression model, the supervisor Y is numerical value which is quantitative, which Y is qualitative in classification model(Categorical values).
+
+Question 3: Regression: Training Mean Squared Error and test Mean Squared Error Classification: Training Error Rate and test Error Rate
+
+Question 4:Descriptive model: It chooses a model which is to emphasize a trend in data. Inferential model is to test test theories or state the relationship between a predictor and outcomes. Predictive model is to predict Y with minimum reducible error.
+
+Question 5:a. Mechanistic: assume a parametric form between the predictor(s) and the outcome; won't match true unknown form;model becomes more flexibility if add parameters; higher bias and lower variance. Empirically-driven： no assumptions; require a larger number of observations;more flexible by default; higher variance and lower bias. b. Mechanistic models is easier because they generally fit relatively simple parametric forms. It predicts the real-word events. c. Mechanistic has higher bias and lower variance while empirically-driven has higher variance and lower bias
+
+Question 6: a. Predictive model, as it aims to find how likely it is which is to predict a value. b. Inferential model, as it aims to find the relationship.
+
+## Exploratory Data Analysis
+
+Exercise1 1:
+
+```{r}
+library(ggplot2)
+data("mpg")
+colors <- c("Blue", "red", "yellow", "black", "green")
+hist(mpg$hwy, col=colors, main="Exercise1", breaks=5, xlim = range(10:45), xlab="hwy",ylab= "Freq")
+```
+
+We can see that many vehivles' mpg are 25-30 while few are 35-45.
+
+Exercise 2 :
+
+```{r}
+ggplot(data=mpg, aes(x=hwy, y=cty)) + geom_point(size=2,color="red")+stat_smooth(method="lm")
+```
+
+Yes, there is relationship. We can say that hwy and cty have linear relations. It means that the vehivles with high mpg is not only high in city and also high in highway.
+
+Exercise 3:
+
+```{r}
+ggplot(mpg, aes(x = manufacturer))+
+  geom_bar(stat = "count", fill = "blue")+
+  ggtitle("Bar plot of manufacturer")
+```
+
+```{r}
+mpg  %>%
+    group_by(manufacturer) %>%
+    summarise(count = n()) %>%
+    ggplot(aes(y = reorder(manufacturer, (count)),x = count))+
+        geom_bar(stat = "identity", fill = "blue")+
+    xlab("weight")+ylab("manufacturer")+
+    ggtitle("In order")
+```
+
+Dodge produced the most cars and Lincoln the least.
+
+Exercise 4:
+
+```{r}
+library(tidyverse)
+boxplot(hwy ~ cyl, data = mpg,col = c("red", "blue", "yellow","grey"))
+```
+
+We can see that the a.value of cyl is high, hwy value is decreased. b.value of cyl is low, and hwy value is increased. c.
+
+Exercise 5:
+
+```{r}
+library("corrplot")
+data <-  subset(mpg,  select = -c(manufacturer, model, trans,drv,fl,class))
+M<-cor(data)
+head(round(M,2))
+corrplot(M, type="lower")
+```
+
+Hwy and Cty have negative relationship with displ and cty. This makes sense because high displ and high cylinders will consume more oil thus decrease the hwy and cty. Hwy has positive relationship with cty as explained in last question. Cyl has positive relationship with displ and it makes senses as well.
