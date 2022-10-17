@@ -1,0 +1,104 @@
+---
+title: "131-hw2"
+author: "Russell Liu"
+date: "2022-10-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+abalone <- read.csv(file = '/Users/liusenyuan/Desktop/PSTAT131/HW/HW2-131/data/abalone.csv')
+view(abalone)
+```
+
+Questuon 1
+
+```{r}
+abalone <- abalone %>%
+  mutate(age=rings+1.5)
+view(abalone)
+```
+
+```{r}
+hist(abalone$age, xlab = "Age",breaks =30, 
+     main = "Distribution of Age", col = 'blue')
+```
+
+we can see that it is not evenly distributed while sckewed to left around 10-15.
+
+Question 2
+
+```{r}
+set.seed(3435)
+
+abalone_split <- initial_split(abalone, prop = 0.70,
+                                strata = age)
+abalone_train <- training(abalone_split)
+abalone_test <- testing(abalone_split)
+```
+
+Question 3
+
+```{r}
+abalone_recipe <- abalone_train %>%
+  recipe(age ~ type+longest_shell+diameter+height+whole_weight+
+           shucked_weight+viscera_weight+shell_weight) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_interact(terms = ~ starts_with("type"):shucked_weight+longest_shell:
+                  diameter+shucked_weight:shell_weight) %>% 
+  step_center(all_predictors()) %>% 
+  step_scale(all_predictors())
+```
+
+Question 4
+
+```{r}
+lm_model <- linear_reg() %>% 
+  set_engine("lm")
+```
+
+Question 5
+
+```{r}
+lm_wflow <- workflow() %>% 
+  add_model(lm_model) %>% 
+  add_recipe(abalone_recipe)
+```
+
+Question 6
+
+```{r}
+lm_fit <- fit(lm_wflow, abalone_train)
+abalone_hypo <- data.frame(type = "F",longest_shell = 0.50, 
+                           diameter = 0.10, 
+                           height = 0.30,
+                           whole_weight = 4,
+                           shucked_weight = 1, 
+                           shell_weight = 1,
+                           viscera_weight = 2)
+predict(lm_fit, new_data = abalone_hypo)
+```
+
+Question 7
+
+```{r}
+#1
+abalone_metrics <- metric_set(rsq, rmse, mae)
+#2
+abalone_train_res <- predict(lm_fit, new_data = abalone_train %>% select(-age))
+abalone_train_res<-bind_cols(abalone_train_res, abalone_train %>% select(age))
+abalone_train_res %>%
+  head()
+```
+
+```{r}
+#3
+abalone_metrics(abalone_train_res, truth = age, estimate = .pred)
+```
+
+We can see that R2 score is only 0.55 which we can interpret that the model is not very accurate. RMSE is also a little high for an error and MAE refelcts that there is 1.51 difference between prediction and the true value.
